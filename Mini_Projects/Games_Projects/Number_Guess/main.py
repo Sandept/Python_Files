@@ -17,7 +17,7 @@ while count!=0:
         print('The number is less than ', a)
     else:
         print('The number is greater than ', a)
-    count=-1
+    count =- 1
 
 
 print (count)
