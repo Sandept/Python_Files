@@ -3,56 +3,56 @@ import random
 import shutil
 import subprocess
 
-# 1. Define the source repository and destination folder
 SOURCE_REPO = "https://github.com/ndleah/python-mini-project.git"
 TEMP_DIR = "temp_source_repo"
 DEST_FOLDER = "Projects"
 
 def main():
-    # 2. Clone the source repository temporarily
-    print(f"Cloning {SOURCE_REPO}...")
+    # 1. Clone source
+    if os.path.exists(TEMP_DIR):
+        shutil.rmtree(TEMP_DIR)
     subprocess.run(["git", "clone", SOURCE_REPO, TEMP_DIR], check=True)
 
-    # 3. Find all project folders in the root of the cloned repo
-    # We ignore the hidden '.git' folder and only look for directories
-    project_folders = []
-    for item in os.listdir(TEMP_DIR):
-        item_path = os.path.join(TEMP_DIR, item)
-        if os.path.isdir(item_path) and item != ".git":
-            project_folders.append(item)
+    # 2. Get all projects from source
+    all_projects = [item for item in os.listdir(TEMP_DIR) 
+                    if os.path.isdir(os.path.join(TEMP_DIR, item)) and item != ".git"]
 
-    if not project_folders:
-        print("No project folders found in the source repository.")
+    # 3. Get projects already in your 'Projects' folder
+    os.makedirs(DEST_FOLDER, exist_ok=True)
+    existing_projects = os.listdir(DEST_FOLDER)
+
+    # 4. Filter: Only pick projects NOT already in your folder
+    available_projects = [p for p in all_projects if p not in existing_projects]
+
+    if not available_projects:
+        print("All projects have been fetched! No new projects to add.")
+        # Optional: You could choose to clear your Projects folder here to start over
         return
 
-    # 4. Pick a random project folder
-    chosen_folder = random.choice(project_folders)
+    # 5. Pick randomly from the remaining list
+    chosen_folder = random.choice(available_projects)
     source_folder_path = os.path.join(TEMP_DIR, chosen_folder)
     dest_folder_path = os.path.join(DEST_FOLDER, chosen_folder)
     
-    # 5. Copy the entire folder (including READMEs) to your repository
-    print(f"Chosen project folder: {chosen_folder}")
-    # dirs_exist_ok=True prevents errors if the folder happens to already exist
-    shutil.copytree(source_folder_path, dest_folder_path, dirs_exist_ok=True)
+    # 6. Copy the new project
+    shutil.copytree(source_folder_path, dest_folder_path)
     
-    # 6. Add credit to any Python files inside the newly copied folder
+    # 7. Add credit (same as before)
     for root, dirs, files in os.walk(dest_folder_path):
         for file in files:
             if file.endswith(".py"):
                 file_path = os.path.join(root, file)
+                # Check if we already added credit to avoid double-adding
                 with open(file_path, 'r+', encoding='utf-8') as f:
                     content = f.read()
-                    f.seek(0, 0)
-                    f.write(f"# Automated import from: {SOURCE_REPO}\n# Original Author: ndleah\n\n" + content)
+                    if "# Automated import from" not in content:
+                        f.seek(0, 0)
+                        f.write(f"# Automated import from: {SOURCE_REPO}\n# Original Author: ndleah\n\n" + content)
 
-    print(f"Successfully copied the entire '{chosen_folder}' folder into {DEST_FOLDER}/")
+    print(f"Successfully added new project: {chosen_folder}")
 
-    # 7. Clean up the temporary cloned repository
-    def remove_readonly(func, path, excinfo):
-        os.chmod(path, 0o777)
-        func(path)
-        
-    shutil.rmtree(TEMP_DIR, onerror=remove_readonly)
+    # 8. Cleanup
+    shutil.rmtree(TEMP_DIR)
 
 if __name__ == "__main__":
     main()
