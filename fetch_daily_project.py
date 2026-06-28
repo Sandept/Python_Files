@@ -3,9 +3,10 @@ import random
 import shutil
 import subprocess
 
-# 1. Define the source repository
+# 1. Define the source repository and destination folder
 SOURCE_REPO = "https://github.com/ndleah/python-mini-project.git"
 TEMP_DIR = "temp_source_repo"
+DEST_FOLDER = "Projects"
 
 def main():
     # 2. Clone the source repository temporarily
@@ -27,9 +28,11 @@ def main():
     chosen_file = random.choice(python_files)
     filename = os.path.basename(chosen_file)
     
-    # 5. Copy the file into your repository (the current directory)
-    # If a file with the same name exists, it will overwrite it or you can modify the name
-    destination = filename
+    # 5. Create the destination folder if it doesn't exist yet
+    os.makedirs(DEST_FOLDER, exist_ok=True)
+    
+    # 6. Copy the file into your new folder
+    destination = os.path.join(DEST_FOLDER, filename)
     shutil.copy(chosen_file, destination)
     
     # Add a comment at the top to give credit to the original author
@@ -38,10 +41,9 @@ def main():
         f.seek(0, 0)
         f.write(f"# Automated import from: {SOURCE_REPO}\n# Original Author: ndleah\n\n" + content)
 
-    print(f"Successfully copied: {filename}")
+    print(f"Successfully copied: {filename} into {DEST_FOLDER}/")
 
-    # 6. Clean up the temporary cloned repository
-    # Handle read-only files in the .git folder which can cause rmtree to fail
+    # 7. Clean up the temporary cloned repository
     def remove_readonly(func, path, excinfo):
         os.chmod(path, 0o777)
         func(path)
